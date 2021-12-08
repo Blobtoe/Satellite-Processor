@@ -1,0 +1,7 @@
+secrets.json
+passes.json
+scheduled_passes.json
+active.tle
+__pycache__/
+*.pyc
+.vscode/
