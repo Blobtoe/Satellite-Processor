@@ -1,5 +1,6 @@
 {
     "output folder": "/home/pi/drive/weather/images/",
+    "pipe_port": 5555,
     "satellites": {
         "METEOR-M 2": {
             "create images": [
@@ -11,6 +12,7 @@
                 "555-precip"
             ],
             "frequency": 137100000,
+            "bandwidth": 110000,
             "minimum elevation": 20,
             "name": "METEOR-M 2",
             "priority": 30,
@@ -31,6 +33,7 @@
                 "raw"
             ],
             "frequency": 137620000,
+            "bandwidth": 37000,
             "minimum elevation": 20,
             "name": "NOAA 15",
             "priority": 0,
@@ -51,6 +54,7 @@
                 "raw"
             ],
             "frequency": 137912500,
+            "bandwidth": 37000,
             "minimum elevation": 20,
             "name": "NOAA 18",
             "priority": 0,
@@ -71,6 +75,7 @@
                 "raw"
             ],
             "frequency": 137100000,
+            "bandwidth": 37000,
             "minimum elevation": 20,
             "name": "NOAA 19",
             "priority": 0,

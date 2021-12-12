@@ -29,6 +29,7 @@ class Pass:
         self.direction = pass_info["direction"]
         self.priority = pass_info["priority"]
         self.sun_elev = pass_info["sun_elev"]
+        self.bandwidth = pass_info["bandwidth"]
 
     def process(self, scheduler):
         local_path = Path(__file__).parent
@@ -51,6 +52,9 @@ class Pass:
             os.makedirs(output_folder)
         except:
             raise Exception("Failed creating new directories for the pass. Aborting")
+
+        os.system(f"nc -l {utils.get_config()['pipe_port']} | sox -t raw -r {self.bandwidth} -c 2 -b 16 -e s - -t wav  {local_path / 'recording.wav'}")
+        
 
         # process APT
         if self.type == "APT":
@@ -94,14 +98,6 @@ class Pass:
 
         #send to home server
         share.home_server(f"{output_filename_base}.json".split("/")[-1], self.info)
-
-        # update the status in daily_passes.json
-        '''
-        with open("/home/pi/website/weather/scripts/scheduled_passes.json", "r+") as f:
-            data = json.load(f)
-            data[pass_index]["status"] = "PASSED"
-            json.dump(data, f, indent=4, sort_keys=True)
-        '''
 
         # append the pass to the passes list
         with open(f"{local_path}/passes.json", "r+") as f:

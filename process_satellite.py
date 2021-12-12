@@ -12,7 +12,7 @@ from utils import log
 local_path = Path(__file__).parent
 
 
-def METEOR(_pass, output_filename_base, scheduler):
+def METEOR(_pass, input_file, output_filename_base, scheduler):
     '''records, demodulates, and decodes METEOR-M 2 given the Pass object for the pass and the output file name, then returns the image's file path'''
     global local_path
 
@@ -23,8 +23,8 @@ def METEOR(_pass, output_filename_base, scheduler):
     }
 
     # record pass baseband with rtl_fm
-    print("recording pass...")
-    os.system(f"timeout {_pass.duration} /usr/local/bin/rtl_fm -M raw -s 110k -f {_pass.frequency} -E dc -g 49.6 -p 0 - | sox -t raw -r 110k -c 2 -b 16 -e s - -t wav {output_filename_base}.iq.wav rate 192k")
+    #print("recording pass...")
+    #os.system(f"timeout {_pass.duration} /usr/local/bin/rtl_fm -M raw -s 110k -f {_pass.frequency} -E dc -g 49.6 -p 0 - | sox -t raw -r 110k -c 2 -b 16 -e s - -t wav {output_filename_base}.iq.wav rate 192k")
 
     #os.system(f"screen -dmS meteor; screen -S meteor -X stuff '/usr/bin/meteor_demod -B -r 72000 -m qpsk -o {output_filename_base}.qpsk -s 110000 /tmp/meteor_iq \r'")
     #os.system(f"timeout {_pass.duration} /usr/local/bin/rtl_fm -M raw -s 110k -f {_pass.frequency} -E dc -g 49.6 -p 0 /tmp/meteor_iq; screen -X -S meteor quit")

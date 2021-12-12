@@ -79,8 +79,10 @@ def parse_pass_info(p):
 
         # name of the sat
         "satellite": satellite_name,
-        # the frequency in MHz the satellite transmits
+        # the frequency in Hz the satellite transmits
         "frequency": satellite_config["frequency"],
+        # the width of the signal in Hz
+        "bandwidth": satellite_config["bandwidth"],
         # time the sat rises above the horizon
         "aos": round(p.start),
         # time the sat reaches its max elevation
