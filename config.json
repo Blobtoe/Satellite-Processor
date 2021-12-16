@@ -1,91 +1,53 @@
 {
     "output folder": "/home/pi/drive/weather/images/",
+    "tle_location": "/home/pi/drive/weather/active.tle",
     "pipe_port": 5555,
+    "webserver_port": 8081,
     "satellites": {
         "METEOR-M 2": {
-            "create images": [
-                "122",
-                "122-precip",
-                "123",
-                "123-precip",
-                "555",
-                "555-precip"
-            ],
-            "frequency": 137100000,
-            "bandwidth": 110000,
-            "minimum elevation": 20,
-            "name": "METEOR-M 2",
-            "priority": 30,
-            "share to": [
-                "imgbb",
-                "website",
-                "discord"
-            ],
-            "type": "LRPT"
+            "downlinks": {
+                "LRPT": {
+                    "frequency": 137100000,
+                    "bandwidth": 110000,
+                    "min_elevation": 20,
+                    "priority": 0
+                }
+            },
+            "name": "METEOR-M 2"
         },
         "NOAA 15": {
-            "create images": [
-                "a",
-                "b",
-                "HVCT",
-                "MSA",
-                "MSA-precip",
-                "raw"
-            ],
-            "frequency": 137620000,
-            "bandwidth": 37000,
-            "minimum elevation": 20,
-            "name": "NOAA 15",
-            "priority": 0,
-            "share to": [
-                "imgbb",
-                "website",
-                "discord"
-            ],
-            "type": "APT"
+            "downlinks": {
+                "APT": {
+                    "frequency": 137620000,
+                    "bandwidth": 50000,
+                    "min_elevation": 20,
+                    "priority": 0
+                }
+            },
+            "name": "NOAA 15"
         },
         "NOAA 18": {
-            "create images": [
-                "a",
-                "b",
-                "HVCT",
-                "MSA",
-                "MSA-precip",
-                "raw"
-            ],
-            "frequency": 137912500,
-            "bandwidth": 37000,
-            "minimum elevation": 20,
-            "name": "NOAA 18",
-            "priority": 0,
-            "share to": [
-                "imgbb",
-                "website",
-                "discord"
-            ],
-            "type": "APT"
+            "downlinks": {
+                "APT": {
+                    "frequency": 137912500,
+                    "bandwidth": 50000,
+                    "min_elevation": 20,
+                    "priority": 0
+                }
+            },
+            "name": "NOAA 18"
         },
         "NOAA 19": {
-            "create images": [
-                "a",
-                "b",
-                "HVCT",
-                "MSA",
-                "MSA-precip",
-                "raw"
-            ],
-            "frequency": 137100000,
-            "bandwidth": 37000,
-            "minimum elevation": 20,
-            "name": "NOAA 19",
-            "priority": 0,
-            "share to": [
-                "imgbb",
-                "website",
-                "discord"
-            ],
-            "type": "APT"
+            "downlinks": {
+                "APT": {
+                    "frequency": 137100000,
+                    "bandwidth": 50000,
+                    "min_elevation": 20,
+                    "priority": 0
+                }
+            },
+            "name": "NOAA 19"
         }
     },
-    "tle update frequency": 6
+    "tle_update_frequency": 6
 }

@@ -1,112 +1,46 @@
-import multiprocessing
-from flask import Flask, jsonify, request, render_template
+from bottle import post, run, request, response, get
+from threading import Thread, Event
 import json
-from pathlib import Path
-import traceback
-from flask_cors import CORS
-import requests
+from datetime import datetime
 
-# local imports
+from PassPredictor import PassPredictor
 import utils
-import share
 
-app = Flask(__name__)
-CORS(app)
-scheduler = None
+class Webserver(Thread):
+    def __init__(self, predictor, scheduler):
+        Thread.__init__(self)
+        self.exit_event = Event()
+        self.predictor = predictor
+        self.scheduler = scheduler
+        self.start()
+    
+    # GET /status
+    def status(self):
+        return json.dumps(self.scheduler.status)
 
-local_path = Path(__file__).parent
+    # POST /future_passes (satellites [, start_date=now, pass_count=1, min_elevation=0, max_elevation=90, min_sun_elevation=-90, max_sun_elevation=90]
+    def future_passes(self):
+        parameters = request.json
+        keys = list(parameters.keys())
+        if "satellites" not in keys:
+            response.status == 400
+            return "not all required parameters given"
+        else:
+            start_date = parameters["start_date"] if "start_date" in keys else datetime.now()
+            pass_count = parameters["pass_count"] if "pass_count" in keys else 1
+            satellites = [utils.get_satellite(name) for name in parameters["satellites"]]
+            min_elevation = parameters["min_elevation"] if "min_elevation" in keys else 0
+            max_elevation = parameters["max_elevation"] if "max_elevation" in keys else 90
+            min_sun_elevation = parameters["min_sun_elevation"] if "min_sun_elevation" in keys else -90
+            max_sun_elevation = parameters["max_sun_elevation"] if "max_sun_elevation" in keys else 90
+            predictor = PassPredictor(start_date, None, satellites, min_elevation, max_elevation, min_sun_elevation, max_sun_elevation)
+            return json.dumps([next(predictor).json() for i in range(pass_count)])
 
+    def exit(self):
+        self.exit_event.set()
+        self.join()
 
-class WebServer:
-    def __init__(self, sched):
-        global scheduler, app
-        scheduler = sched
-
-        # create the background process
-        self.process = multiprocessing.Process(target=app.run, kwargs=({"port": 5000}))
-
-        # create flask app
-        self.app = app
-
-    def start(self):
-        '''Starts the webserver in a new process'''
-        self.process.start()
-
-    def stop(self):
-        '''Stops the webserver process'''
-        # stop the process
-        self.process.terminate()
-        # re-create the background process
-        self.process = multiprocessing.Process(target=app.run, kwargs=({"port": 5000}))
-
-###############
-###ENDPOINTS###
-###############
-
-
-@app.route("/", methods=["GET"])
-def home():
-    return render_template("index.html", data={"config": utils.get_config()})
-
-
-@app.route('/get/next/pass', methods=['GET', "OPTIONS"])
-def next_pass():
-    try:
-        # read parameters
-        after = int(request.args.get("after")) if request.args.get("after") != None else None
-        pass_count = int(request.args.get("pass_count")) if request.args.get("pass_count") != None else None
-        # return the json info of the requested passes
-        return jsonify([p.info for p in scheduler.get_future_passes(after=after, pass_count=pass_count)])
-    # if we run into an error, print the error and return code 400
-    except Exception as e:
-        utils.log(e)
-        return str(e), 400
-
-
-@app.route("/update/config", methods=["POST"])
-def update_config():
-    with open(local_path / "config.json", "w") as f:
-        f.write(json.dumps(request.json, indent=4, sort_keys=True))
-    return "Success", 200
-
-
-@app.route("/get/config", methods=["GET"])
-def get_config():
-    with open(local_path / "config.json") as f:
-        return jsonify(json.load(f))
-
-
-@app.route("/get/status", methods=["GET"])
-def get_status():
-    return jsonify(scheduler.get_status())
-
-
-@app.route("/get/pass", methods=["GET"])
-def get_pass():
-    # read pass count parameter
-    pass_count = int(request.args.get("pass_count")) if request.args.get("pass_count") != None else 1
-    after = float(request.args.get("after")) if request.args.get("after") != None else None
-    before = float(request.args.get("before")) if request.args.get("before") != None else None
-    satellite_names = request.args.get("satellites").split(",")  if request.args.get("satellites") != None else None
-    min_elevation = float(request.args.get("min_elevation")) if request.args.get("min_elevation") != None else None
-    max_elevation = float(request.args.get("max_elevation")) if request.args.get("max_elevation") != None else None
-    min_sun_elevation = float(request.args.get("min_sun_elevation")) if request.args.get("min_sun_elevation") != None else None
-    max_sun_elevation = float(request.args.get("max_sun_elevation")) if request.args.get("max_sun_elevation") != None else None
-
-    passes = scheduler.get_passes(pass_count=pass_count, after=after, before=before, satellite_names=satellite_names, min_elevation=min_elevation, max_elevation=max_elevation, min_sun_elevation=min_sun_elevation, max_sun_elevation=max_sun_elevation)
-
-    return jsonify([p.info for p in passes])
-
-
-@app.route("/request/home_assistant_latest_pass", methods=["GET"])
-def request_home_assistant_latest_pass():
-    share.home_assistant(scheduler.get_passes()[0].info, scheduler.get_future_passes()[0].info)
-    return "Success", 200
-
-
-@app.route("/request/home_assistant_next_pass", methods=["GET"])
-def request_home_assistant_next_pass():
-    utils.log("Sending next pass to home assistant")
-    requests.post("http://192.168.1.101:8123/api/webhook/next_satellite_pass", json=scheduler.get_future_passes()[0].info)
-    utils.log("done")
-    return "Success", 200
+    def run(self):
+        post("/future_passes")(self.future_passes)
+        get("/status")(self.status)
+        run(host="localhost", port=utils.get_config()["webserver_port"], debug=True, quiet=True)

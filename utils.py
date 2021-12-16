@@ -4,45 +4,17 @@ from PIL import Image
 from pathlib import Path
 import json
 import ephem
+import enum
+import logging
 
+from Satellite import Satellite
+from Downlink import Downlink
+from APT import APT
+from LRPT import LRPT
 
 local_path = Path(__file__).parent
 
-
-def log(message):
-    '''
-    prints a message to the console with the date and time
-    '''
-
-    print(f"LOG: {datetime.now().strftime('%Y/%m/%d %H:%M:%S')} - {str(message)}")
-
-
-def download_tle():
-    '''
-    download the "active" tle file from celestrak
-    '''
-
-    log("Downloading TLE file")
-    # make the request to the website
-    r = requests.get("https://www.celestrak.com/NORAD/elements/active.txt")
-    # save the response to a file
-    open(local_path / "active.tle", "w+").write(r.text.replace("\r", ""))
-
-
-def parse_tle(tle_file_name, satellite_name):
-    '''
-    returns the parsed tle lines from a tle file
-    '''
-
-    # pad the satellite name with spaces to make it 24 characters long
-    satellite_name = satellite_name.ljust(24, " ")
-    # read the lines of the tle file
-    lines = open(tle_file_name, "r").read().splitlines()
-    # get the index of the satellite's name
-    index = lines.index(satellite_name)
-    # return the 3 lines at the index
-    return "\n".join(lines[index:index+3])
-
+last_tle_update = None
 
 def get_config():
     '''returns the json data in the config file'''
@@ -57,56 +29,72 @@ def get_secrets():
     with open(local_path / "secrets.json") as f:
         return json.load(f)
 
+def download_tle():
+    '''
+    download the "active" tle file from celestrak
+    '''
 
-def parse_pass_info(p):
-    '''creates a dict for a predicted transit'''
+    logging.info("Downloading TLE file")
+    # make the request to the website
+    r = requests.get("https://www.celestrak.com/NORAD/elements/active.txt")
+    # save the response to a file
+    tle_file = get_config()["tle_location"]
+    open(tle_file, "w+").write(r.text.replace("\r", ""))
 
-    satellite_name = p.peak()["name"].strip()
-    satellite_config = get_config()["satellites"][satellite_name]
 
+def get_tle(satellite_name):
+    '''
+    returns the parsed tle lines from the tle file
+    '''
+    global last_tle_update
+
+    # if the tle is out of date
+    if last_tle_update == None or (datetime.now() - last_tle_update).total_seconds() / 3600 >= get_config()["tle_update_frequency"]:
+        download_tle()
+        last_tle_update = datetime.now()
+
+    tle_file = get_config()["tle_location"]
+    # pad the satellite name with spaces to make it 24 characters long
+    satellite_name = satellite_name.ljust(24, " ")
+    # read the lines of the tle file
+    with open(tle_file, "r") as f:
+        lines = f.read().splitlines()
+    # get the index of the satellite's name
+    index = lines.index(satellite_name)
+    # return the 3 lines at the index
+    return "\n".join(lines[index:index+3])
+
+def get_satellites() -> list:
+    config = get_config()
+    satellites = []
+    for satellite in config["satellites"]:
+        downlinks = []
+        for downlink in config["satellites"][satellite]["downlinks"].keys():
+            parameters = config["satellites"][satellite]["downlinks"][downlink]
+            downlinks.append(Downlinks[downlink].value(parameters["frequency"], parameters["bandwidth"], parameters["min_elevation"], parameters["priority"], downlink))
+        satellites.append(Satellite(satellite, downlinks))
+    return satellites
+
+def get_satellite(satellite_name) -> Satellite:
+    try:
+        satellite_config = get_config()["satellites"][satellite_name]
+        downlinks = [Downlinks[downlink].value(satellite_config["downlinks"][downlink]["frequency"], satellite_config["downlinks"][downlink]["bandwidth"], satellite_config["downlinks"][downlink]["min_elevation"], satellite_config["downlinks"][downlink]["priority"], downlink) for downlink in satellite_config["downlinks"]]
+        return Satellite(satellite_name, downlinks)
+    except:
+        logging.error(f"Failed to get satellite \"{satellite_name}\"")
+        return None
+
+def get_sun_elevation(time):
     # compute the sun elevation at peak elevation
     # start ephem for sun elevation predictions
     obs = ephem.Observer()
     obs.lat = str(get_secrets()["lat"])
     obs.long = str(get_secrets()["lon"])
-    obs.date = datetime.utcfromtimestamp(round(p.peak()["epoch"]))
+    obs.date = time
     sun = ephem.Sun(obs)
     sun.compute(obs)
-    sun_elev = round(float(sun.alt) * 57.2957795, 1)  # convert from radians to degrees
-
-    return {
-        # ALL TIMES ARE IN SECONDS SINCE EPOCH (UTC)
-
-        # name of the sat
-        "satellite": satellite_name,
-        # the frequency in Hz the satellite transmits
-        "frequency": satellite_config["frequency"],
-        # the width of the signal in Hz
-        "bandwidth": satellite_config["bandwidth"],
-        # time the sat rises above the horizon
-        "aos": round(p.start),
-        # time the sat reaches its max elevation
-        "tca": round(p.peak()["epoch"]),
-        # time the sat passes below the horizon
-        "los": round(p.end),
-        # maximum degrees of elevation
-        "max_elevation": round(p.peak()["elevation"], 1),
-        # duration of the pass in seconds
-        "duration":  round(p.duration()),
-        # status INCOMING, CURRENT, COMPLETED or FAILED
-        "status": "INCOMING",
-        # type of satellite
-        "type": satellite_config["type"],
-        # azimuth at the tca
-        "azimuth_tca": round(p.peak()["azimuth"], 1),
-        # azimuth at the aos
-        "azimuth_aos": round(p.at(p.start)["azimuth"], 1),
-        # azimuth at the los
-        "azimuth_los": round(p.at(p.end)["azimuth"], 1),
-        # either northbound or southbound
-        "direction": "northbound" if 90 < p.at(p.start)["azimuth"] > 270 else "southbound",
-        # the priority of the satellite
-        "priority": satellite_config["priority"],
-        # the elevation of the sun at the peak elevation
-        "sun_elev": sun_elev
-    }
+    return round(float(sun.alt) * 57.2957795, 1)  # convert from radians to degrees
+    
+class Downlinks(enum.Enum):
+    APT = APT
+    LRPT = LRPT
