@@ -13,11 +13,15 @@ Satellite Processor is automatic satellite prediction and processing software. I
 ```
 # clone this repo
 git clone https://github.com/Blobtoe/Satellite-Processor.git
+cd Satellite-Processor
 # assign execution permissions
 chmod +x SatelliteProcessor.py
 # run Satellite Processor
 ./SatelliteProcessor.py
 ```
+
+## Upcoming Features
+- Actually processing lol
 
 ## External Tools
 - <a href="https://wxtoimgrestored.xyz/">**wxtoimg**</a> for APT decoding
