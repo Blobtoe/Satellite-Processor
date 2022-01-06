@@ -15,6 +15,7 @@ Satellite Processor is automatic satellite prediction and processing software. I
 git clone https://github.com/nsat/pypredict.git
 cd pypredict
 sudo python3 setup.py install
+
 # clone this repo
 git clone https://github.com/Blobtoe/Satellite-Processor.git
 cd Satellite-Processor
@@ -22,6 +23,7 @@ cd Satellite-Processor
 python3 -m pip install -r requirements.txt
 # assign execution permissions
 chmod +x SatelliteProcessor.py
+
 # run Satellite Processor
 ./SatelliteProcessor.py
 ```
