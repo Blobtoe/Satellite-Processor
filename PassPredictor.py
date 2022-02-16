@@ -29,14 +29,6 @@ class PassPredictor:
         next(next_predictor)
         self.value = next_pass
         return next_pass
-            
-'''
-import utils
-sats = utils.get_satellites()
-from PassPredictor import PassPredictor
-p = PassPredictor(satellites=sats, min_elevation=20)
-test = next(p)
-'''
 
             
 

@@ -1,5 +1,5 @@
 {
-    "output folder": "/home/pi/drive/weather/images/",
+    "output_dir": "/home/pi/drive/weather/images/",
     "tle_location": "/home/pi/drive/weather/active.tle",
     "pipe_port": 5555,
     "webserver_port": 8081,
@@ -47,6 +47,18 @@
                 }
             },
             "name": "NOAA 19"
+        }
+    },
+    "downlinks": {
+        "APT": {
+            "image_tags": [
+                "contrast_a",
+                "contrast_b",
+                "HVCT",
+                "MSA",
+                "MSA-precip",
+                "raw"
+            ]
         }
     },
     "tle_update_frequency": 6

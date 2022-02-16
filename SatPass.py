@@ -1,6 +1,8 @@
 import json
 import logging
 
+import utils
+
 class SatPass:
     def __init__(self, satellite, aos, tca, los, peak_elevation, duration, aos_azimuth, los_azimuth, sun_elevation):
         self.satellite = satellite
@@ -12,7 +14,9 @@ class SatPass:
         self.aos_azimuth = aos_azimuth
         self.los_azimuth = los_azimuth
         self.sun_elevation = sun_elevation
-    
+        self.output_dir = f"{utils.get_config()['output_dir']}/{aos.strftime('%Y')}/{aos.strftime('%Y-%m')}/{aos.strftime('%Y-%m-%d')}/{aos.strftime('%Y-%m-%d_%H.%M.%S')}"
+        self.filename_base = f"{self.aos.strftime('%Y-%m-%d_%H.%M.%S')}"
+
     def json(self) -> dict:
         return {
             "satellite": self.satellite.json(),
