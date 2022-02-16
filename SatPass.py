@@ -1,9 +1,11 @@
-import json
 import logging
 
 import utils
 
 class SatPass:
+    '''
+    stores information about a satellite pass
+    '''
     def __init__(self, satellite, aos, tca, los, peak_elevation, duration, aos_azimuth, los_azimuth, sun_elevation):
         self.satellite = satellite
         self.aos = aos
@@ -34,5 +36,8 @@ class SatPass:
         return f"{self.peak_elevation} deg {self.satellite.name} pass at {self.aos}"
     
     def process(self):
+        '''
+        process the satellite pass
+        '''
         logging.info(f"Processing {self}")
-        pass
+        self.satellite.downlinks[0].process(self)

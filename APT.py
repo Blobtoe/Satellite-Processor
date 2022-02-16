@@ -1,3 +1,5 @@
+import logging
+
 from Downlink import Downlink
 import logging
 import os

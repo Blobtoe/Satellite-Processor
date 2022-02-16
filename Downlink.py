@@ -1,4 +1,7 @@
 class Downlink:
+    '''
+    base class for a satellite downlink
+    '''
     def __init__(self, frequency, bandwidth, min_elevation, priority, name):
         self.frequency = frequency
         self.bandwidth = bandwidth
