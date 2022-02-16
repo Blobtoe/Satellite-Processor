@@ -1,8 +1,8 @@
 {
-    "output folder": "/home/pi/drive/weather/images/",
-    "tle_location": "/home/pi/drive/weather/active.tle",
+    "output folder": "/home/felix/test_images/",
+    "tle_location": "/home/felix/Satellite-Processor/active.tle",
     "pipe_port": 5555,
-    "webserver_port": 8081,
+    "webserver_port": 8083,
     "satellites": {
         "METEOR-M 2": {
             "downlinks": {
